@@ -1,0 +1,32 @@
+<h1>Listado de Productos</h1>
+
+{{#if products}}
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 2rem;">
+        {{#each products}}
+            <div style="background: white; border-radius: 8px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <h3 style="color: #667eea; margin-bottom: 0.5rem;">{{this.title}}</h3>
+                <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">{{this.description}}</p>
+                <div style="margin-bottom: 1rem;">
+                    <p><strong>Código:</strong> {{this.code}}</p>
+                    <p><strong>Precio:</strong> ${{this.price}}</p>
+                    <p><strong>Stock:</strong> {{this.stock}}</p>
+                    <p><strong>Categoría:</strong> {{this.category}}</p>
+                    <p><strong>Status:</strong> 
+                        {{#if this.status}}
+                            <span style="color: green;">Activo</span>
+                        {{else}}
+                            <span style="color: red;">Inactivo</span>
+                        {{/if}}
+                    </p>
+                </div>
+                {{#if this.thumbnails}}
+                    <p><strong>Imágenes:</strong> {{this.thumbnails.length}}</p>
+                {{/if}}
+            </div>
+        {{/each}}
+    </div>
+{{else}}
+    <p style="text-align: center; color: #999; margin-top: 2rem;">
+        No hay productos disponibles. Crea el primero desde la API.
+    </p>
+{{/if}}

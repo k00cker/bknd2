@@ -1,0 +1,150 @@
+<div class="container" style="padding: 2rem;">
+  <h1 style="color: #333; margin-bottom: 1rem;">Productos</h1>
+
+  <!-- Filtros y ordenamiento -->
+  <form method="GET" style="margin-bottom: 2rem; background: #f5f5f5; padding: 1.5rem; border-radius: 8px;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+      <div>
+        <label for="query" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Categoría/Disponibilidad:</label>
+        <input type="text" name="query" id="query" placeholder="Ej: electrónica, disponible" value="{{query}}" 
+               style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+      </div>
+      <div>
+        <label for="sort" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Ordenar por precio:</label>
+        <select name="sort" id="sort" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          <option value="">Sin ordenamiento</option>
+          <option value="asc" {{#if sort}}{{#equal sort 'asc'}}selected{{/equal}}{{/if}}>Ascendente</option>
+          <option value="desc" {{#if sort}}{{#equal sort 'desc'}}selected{{/equal}}{{/if}}>Descendente</option>
+        </select>
+      </div>
+      <div>
+        <label for="limit" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Productos por página:</label>
+        <input type="number" name="limit" id="limit" min="1" value="{{limit}}" placeholder="10"
+               style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+      </div>
+    </div>
+    <button type="submit" style="background: #667eea; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+      Filtrar
+    </button>
+  </form>
+
+  <!-- Productos -->
+  {{#if products}}
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+      {{#each products}}
+        <div style="background: white; border-radius: 8px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; flex-direction: column;">
+          <h3 style="color: #667eea; margin-bottom: 0.5rem; margin-top: 0;">{{this.title}}</h3>
+          <p style="color: #666; font-size: 0.9rem; margin-bottom: 0.5rem; flex-grow: 1;">{{this.description}}</p>
+          <div style="margin-bottom: 1rem; border-top: 1px solid #eee; padding-top: 1rem;">
+            <p style="margin: 0.25rem 0;"><strong>Categoría:</strong> {{this.category}}</p>
+            <p style="margin: 0.25rem 0;"><strong>Precio:</strong> ${{this.price}}</p>
+            <p style="margin: 0.25rem 0;"><strong>Stock:</strong> {{this.stock}}</p>
+            <p style="margin: 0.25rem 0;">
+              <strong>Estado:</strong>
+              {{#if this.status}}
+                <span style="color: green;">✓ Disponible</span>
+              {{else}}
+                <span style="color: red;">✗ No disponible</span>
+              {{/if}}
+            </p>
+          </div>
+          <div style="display: flex; gap: 0.5rem;">
+            <a href="/products/{{this._id}}" 
+               style="flex: 1; background: #667eea; color: white; padding: 0.5rem; text-align: center; text-decoration: none; border-radius: 4px; cursor: pointer;">
+              Ver Detalles
+            </a>
+            <button onclick="agregarAlCarrito('{{this._id}}')" 
+                    style="flex: 1; background: #28a745; color: white; padding: 0.5rem; border: none; border-radius: 4px; cursor: pointer;">
+              Agregar al Carrito
+            </button>
+          </div>
+        </div>
+      {{/each}}
+    </div>
+  {{else}}
+    <p style="text-align: center; color: #999; margin: 2rem 0;">No hay productos disponibles con los filtros especificados.</p>
+  {{/if}}
+
+  <!-- Paginación -->
+  {{#if totalPages}}
+    <div style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 2rem; flex-wrap: wrap;">
+      {{#if hasPrevPage}}
+        <a href="/products?page={{prevPage}}{{#if query}}&query={{query}}{{/if}}{{#if sort}}&sort={{sort}}{{/if}}&limit={{limit}}" 
+           style="background: #667eea; color: white; padding: 0.5rem 1rem; text-decoration: none; border-radius: 4px;">
+          ← Anterior
+        </a>
+      {{/if}}
+
+      {{#each (getPageNumbers page totalPages)}}
+        {{#if this.active}}
+          <span style="background: #667eea; color: white; padding: 0.5rem 1rem; border-radius: 4px; font-weight: bold;">
+            {{this.number}}
+          </span>
+        {{else}}
+          <a href="/products?page={{this.number}}{{#if query}}&query={{query}}{{/if}}{{#if sort}}&sort={{sort}}{{/if}}&limit={{limit}}" 
+             style="background: #e0e0e0; color: #333; padding: 0.5rem 1rem; text-decoration: none; border-radius: 4px;">
+            {{this.number}}
+          </a>
+        {{/if}}
+      {{/each}}
+
+      {{#if hasNextPage}}
+        <a href="/products?page={{nextPage}}{{#if query}}&query={{query}}{{/if}}{{#if sort}}&sort={{sort}}{{/if}}&limit={{limit}}" 
+           style="background: #667eea; color: white; padding: 0.5rem 1rem; text-decoration: none; border-radius: 4px;">
+          Siguiente →
+        </a>
+      {{/if}}
+
+      <span style="padding: 0.5rem 1rem;">Página {{page}} de {{totalPages}}</span>
+    </div>
+  {{/if}}
+</div>
+
+<script>
+  function agregarAlCarrito(productId) {
+    // Obtener o crear carrito en localStorage
+    let carritoId = localStorage.getItem('carritoId');
+    
+    if (!carritoId) {
+      // Crear nuevo carrito
+      fetch('/api/carts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(r => r.json())
+      .then(data => {
+        carritoId = data.payload._id;
+        localStorage.setItem('carritoId', carritoId);
+        agregarProductoAlCarrito(carritoId, productId);
+      })
+      .catch(e => alert('Error al crear carrito: ' + e.message));
+    } else {
+      agregarProductoAlCarrito(carritoId, productId);
+    }
+  }
+
+  function agregarProductoAlCarrito(carritoId, productId) {
+    fetch(`/api/carts/${carritoId}/product/${productId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(r => {
+      if (!r.ok) {
+        throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+      }
+      return r.json();
+    })
+    .then(data => {
+      if (data.status === 'success') {
+        alert('✅ Producto agregado al carrito');
+      } else {
+        const errorMsg = data.error || data.message || 'Error desconocido';
+        alert('❌ Error: ' + errorMsg);
+      }
+    })
+    .catch(e => {
+      console.error('Error en agregarProductoAlCarrito:', e);
+      alert('❌ Error: ' + e.message);
+    });
+  }
+</script>
